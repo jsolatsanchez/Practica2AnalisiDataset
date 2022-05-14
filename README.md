@@ -1,5 +1,5 @@
 # Practica2. Tractament i Anàlisi d'un Dataset
-Pràctica 2 de l'assignatura Tipologia i Cicle de Vida de les dades
+Pràctica 2 de l'assignatura Tipologia i Cicle de Vida de les dades. UOC.
 
 ## Components del grup
 
