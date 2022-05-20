@@ -215,8 +215,6 @@ credit_ds$numPersonesManteniment <- credit_ds_norm$numPersonesManteniment
 # Per tant, es genera un nou conjunt eliminant els outliers ja detectats
 
 credit_ds <- credit_ds[(credit_ds$quantitat_deteccio_outlier == FALSE),]
-credit_ds$quantitat_deteccio_outlier
-
 credit_ds <- credit_ds[(credit_ds$edat_deteccio_outlier == FALSE),]
 credit_ds <- credit_ds[(credit_ds$mesosCredit_deteccio_outlier == FALSE),]
 
