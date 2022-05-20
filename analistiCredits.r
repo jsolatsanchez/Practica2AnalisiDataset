@@ -21,13 +21,13 @@ colnames(credit_ds) <- c("estatCompteCorrent", "mesosCredit",
 files <- dim(credit_ds)
 files
 
-# ANALISI PRELIMINAR =============================================================
+# ANÀLISI PRELIMINAR =============================================================
 summary(credit_ds)
 
-# Analitzant la informació obtinguda de l'aplicació de la funció summary, es poden comprovar els valors mitjans i les medianes (i quartils)
+# Analitzant la informació obtinguda de l'aplicació de la funció summary, es poden comprovar els valors mitjans, les medianes i quartils.
 # de les diferents variables del dataset, d'aquesta anàlisi preliminar es poden extreure les següents conclusions:
 #   * El valor màxim de la variable quantitat es troba a una distància relativament superior de la mediana i la mitjana que el valor mínim, això pot indicar l'existència d'outliers
-#   * La resta de variables tenen una distribució de valors més propera la d'una normal.
+#   * La distribució de valors de les variables edat i mesosCredit també pot fer pensar que hi puguin haver outliers.
 #   * El camp 'bonPagador' està definit com a numèric (1-bon pagador i 2-mal pagador), per tant, es podria posar en termes de 0 i 1, per ser convertit a factor.
 
 # Converteix els valors de bon pagador a 0(FALS) i 1(VERTADER: bon pagador)
@@ -64,7 +64,6 @@ quantitat_netejat
 
 # A continuació s'analitzen els valors de la variable Edat per determinar si hi ha outliers
 
-
 # a) Gràfics de caixes
 credit_ds_edat_bp <-boxplot(credit_ds$edat, main="Edat")
 credit_ds_edat_bp$out
@@ -81,10 +80,12 @@ credit_ds$edat_deteccio_outlier<-edat_deteccio_outlier
 
 
 # Selecciona els valors outliers, els ordena del primer (menor) al darrer (major) i els llista.
-edat_deteccio_outlier <- data.frame(valor = credit_ds$edat, outlier = edat_deteccio_outlier)
-edat_outliers <- edat_deteccio_outlier[edat_deteccio_outlier$outlier == "TRUE", ]
+edat_deteccio_outlier = data.frame(valor = credit_ds$edat, outlier = edat_deteccio_outlier)
+edat_deteccio_outlier
+edat_outliers = edat_deteccio_outlier[edat_deteccio_outlier$outlier == "TRUE", ]
+edat_outliers
 edat_outliers[order(edat_outliers$valor),]$valor
-# Com es pot veure els valors a partir de 8947 podrien ser considerats outliers.
+# Com es pot veure els valors a partir de 59 podrien ser considerats outliers.
 # Creació d'un array sense outliers
 edat_netejat <- edat_deteccio_outlier[edat_deteccio_outlier$outlier == "FALSE", ]
 edat_netejat <- edat_netejat$valor
@@ -92,8 +93,32 @@ edat_netejat
 
 
 
+# Finalment s'analitzen els valors de la variable mesosCredit per determinar si hi ha outliers
+
+# a) Gràfics de caixes
+credit_ds_mesosCredit_bp <-boxplot(credit_ds$mesosCredit, main="mesosCredit - durada")
+credit_ds_mesosCredit_bp$out
+
+# Tot i que la majoria de valors es concentren entre el rang 10 - 30, alguns valors estan per sobre dels 40, que poden ser considerats outliers.
+
+# b) Criteri de les dues desviacions típiques
+mesosCredit_deteccio_outlier <- abs(scale(credit_ds$mesosCredit)) > 2 # Genera un array boolea per indicar si el valor de la posició x és outlier
+summary(credit_ds$mesosCredit)
+mesosCredit_deteccio_outlier
+
+# Guarda la llista de registres detectats com a outliers d'edat
+credit_ds$mesosCredit_deteccio_outlier<-mesosCredit_deteccio_outlier
 
 
+# Selecciona els valors outliers, els ordena del primer (menor) al darrer (major) i els llista.
+mesosCredit_deteccio_outlier <- data.frame(valor = credit_ds$mesosCredit, outlier = mesosCredit_deteccio_outlier)
+mesosCredit_outliers <- mesosCredit_deteccio_outlier[mesosCredit_deteccio_outlier$outlier == "TRUE", ]
+mesosCredit_outliers[order(mesosCredit_outliers$valor),]$valor
+# Com es pot veure els valors a partir de 47 podrien ser considerats outliers.
+# Creació d'un array sense outliers
+mesosCredit_netejat <- mesosCredit_deteccio_outlier[mesosCredit_deteccio_outlier$outlier == "FALSE", ]
+mesosCredit_netejat <- mesosCredit_netejat$valor
+mesosCredit_netejat
 
 
 
@@ -106,12 +131,42 @@ ks.test(unique(credit_ds$quantitat), pnorm, mean(credit_ds$quantitat), sd(credit
 # b) Test de Shapiro-Wilk
 shapiro.test(credit_ds$quantitat)
 
+# En ambdós casos el p-valor és menor que el nivell de significació alfa=0,05, per tant no passa el test de normalitat
+
+
 # COMPROVACIÓ DE LA NORMALITAT DE QUANTITAT NETEJADA (sense outliers) ===============
 # a) Test de Kolmogorov-Smirnov
 ks.test(quantitat_netejat, pnorm, mean(quantitat_netejat), sd(quantitat_netejat))
 
 # b) Test de Shapiro-Wilk
 shapiro.test(quantitat_netejat)
+
+# En ambdós casos el p-valor és menor que el nivell de significació alfa=0,05, per tant no passa el test de normalitat
+
+
+
+# COMPROVACIÓ DE LA NORMALITAT D'EDAT =====================================
+# a) Test de Kolmogorov-Smirnov
+ks.test(credit_ds$edat, pnorm, mean(credit_ds$edat), sd(credit_ds$edat))
+ks.test(edat_netejat, pnorm, mean(edat_netejat), sd(edat_netejat))
+
+
+# b) Test de Shapiro-Wilk
+shapiro.test(edat_netejat)
+
+# En ambdós casos el p-valor és menor que el nivell de significació alfa=0,05, per tant no passa el test de normalitat
+
+
+# COMPROVACIÓ DE LA NORMALITAT DE MESOSCREDIT =====================================
+# a) Test de Kolmogorov-Smirnov
+ks.test(credit_ds$mesosCredit, pnorm, mean(credit_ds$mesosCredit), sd(credit_ds$mesosCredit))
+ks.test(mesosCredit_netejat, pnorm, mean(mesosCredit_netejat), sd(mesosCredit_netejat))
+
+# b) Test de Shapiro-Wilk
+shapiro.test(mesosCredit_netejat)
+
+# En ambdós casos el p-valor és menor que el nivell de significació alfa=0,05, per tant no passa el test de normalitat
+
 
 
 # COMPROVACIÓ DE VALORS BUITS, NULS I INDEFINITS
@@ -132,7 +187,7 @@ apply(credit_ds,2, function(x) length(unique(x)))
   # El número de crèdits que té atorgats cadascuna de les persones (numCredits)
   # El número de persones que es poden fer càrrec del crèdit (numPersonesManteniment)
 
-# En aquest darrer cas, el nombre de valors diferents es redueix a 2 (1 o 2), per tant es podria transformar en un factor (nova variable creditCompartit)
+# En aquest darrer cas, numPersonesManteniment, el nombre de valors diferents es redueix a 2 (1 o 2), per tant es podria transformar en un factor (nova variable creditCompartit)
 credit_ds$creditCompartit[credit_ds$numPersonesManteniment==1] <- 0
 credit_ds$creditCompartit[credit_ds$numPersonesManteniment==2] <- 1
 credit_ds$creditCompartit <- as.factor(credit_ds$creditCompartit)
@@ -160,10 +215,8 @@ credit_ds$numPersonesManteniment <- credit_ds_norm$numPersonesManteniment
 # Per tant, es genera un nou conjunt eliminant els outliers ja detectats
 
 credit_ds <- credit_ds[(credit_ds$quantitat_deteccio_outlier == FALSE),]
-credit_ds$quantitat_deteccio_outlier
-
 credit_ds <- credit_ds[(credit_ds$edat_deteccio_outlier == FALSE),]
-
+credit_ds <- credit_ds[(credit_ds$mesosCredit_deteccio_outlier == FALSE),]
 
 nrow(credit_ds)
 
