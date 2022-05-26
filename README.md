@@ -10,9 +10,7 @@ Pràctica 2 de l'assignatura Tipologia i Cicle de Vida de les dades. UOC.
 
 El projecte conté els següents fitxers:
 
-* TCVD_Practica2_JSola_ASanchez.pdf: document de la memòria del projecte.
-* codifont: directori amb el codi font del projecte.
-  * codifont/main.py: 
+* analistiCredits.r: codi d'R utilitzat per fer el tractament de dades, tests estadístics i generar les gràfiques
 
-## DOI de Zenodo del dataset analitzat
-* 10.5281/zenodo.6426889
+## Enllaç del dataset analitzat
+* https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data
