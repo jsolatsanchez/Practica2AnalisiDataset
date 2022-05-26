@@ -322,6 +322,8 @@ nrow(credit_ds)
 
 # ESTUDI DE LES VARIABLES
 
+files <- dim(credit_ds)
+
 # Relació amb l'edat -------
 ggplot(data=credit_ds[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
 
