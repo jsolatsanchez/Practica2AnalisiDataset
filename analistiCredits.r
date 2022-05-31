@@ -199,7 +199,7 @@ credit_ds_mesosCredit_bp$out
 
 # Tot i que la majoria de valors es concentren entre el rang 10 - 30, alguns valors estan per sobre dels 40, que poden ser considerats outliers.
 
-# b) Criteri de les dues desviacions t�?piques
+# b) Criteri de les dues desviacions t??piques
 mesosCredit_deteccio_outlier <- abs(scale(credit_ds$mesosCredit)) > 2 # Genera un array boolea per indicar si el valor de la posició x és outlier
 summary(credit_ds$mesosCredit)
 mesosCredit_deteccio_outlier
@@ -237,6 +237,11 @@ shapiro.test(credit_ds_net$quantitat)
 
 # En ambdos casos el p-valor es menor que el nivell de significacio alfa=0,05, per tant no passa el test de normalitat
 
+# c) Valoració gràfica de la normalitat emprant Q-Q Plot:
+qqnorm(credit_ds_net$quantitat);qqline(credit_ds_net$quantitat, col = 3)
+
+# A la gràfica es pot veure clarament que els punts no segueixen la forma de la línia recta, per tant, no es tracta d'una distribució normal.
+
 
 # 2.EDAT
 # a) Test de Kolmogorov-Smirnov
@@ -247,6 +252,13 @@ shapiro.test(credit_ds_net$edat)
 
 # En ambdos casos el p-valor es menor que el nivell de significacio alfa=0,05, per tant no passa el test de normalitat
 
+# c) Valoració gràfica de la normalitat emprant Q-Q Plot:
+qqnorm(credit_ds_net$edat);qqline(credit_ds_net$edat, col = 3)
+
+# Si es realitza la valoració gràfica del conjunt original de valors, sense l'eliminació d'outliers, la distribució encara s'allunya més de la normal
+qqnorm(credit_ds$edat);qqline(credit_ds$edat, col = 3)
+
+
 
 # 3.MESOSCREDIT
 # a) Test de Kolmogorov-Smirnov
@@ -256,6 +268,12 @@ ks.test(credit_ds_net$mesosCredit, pnorm, mean(credit_ds_net$mesosCredit), sd(cr
 shapiro.test(credit_ds_net$mesosCredit)
 
 # En ambdos casos el p-valor es menor que el nivell de significacio alfa=0,05, per tant no passa el test de normalitat
+
+# c) Valoració gràfica de la normalitat emprant Q-Q Plot:
+qqnorm(credit_ds_net$mesosCredit);qqline(credit_ds_net$mesosCredit, col = 3)
+
+# En aquest cas, a la gràfica també es pot observar que hi ha menys valors diferents en el conjunt de mesos (en comparació amb altres variables com quantitat), per això l'aspecte escalonat de la gràfica.
+
 
 
 # 4.percentRentaDedicat
@@ -287,12 +305,12 @@ shapiro.test(credit_ds_net$numCredits)
 
 
 # COMPROVACIO DE LA HOMOSCEDASTICITAT==============================================
-# Es comprova si les vari�ncies de les variables canvien en passar de bon a mal pagador
+# Es comprova si les vari?ncies de les variables canvien en passar de bon a mal pagador
 
 # 1. QUANTITAT
 var.test(credit_ds_net[credit_ds_net$bonPagador==0,]$quantitat,credit_ds_net[credit_ds_net$bonPagador==1,]$quantitat)
 
-# Es rebutja la hip�tesi nul�la: les dues mostres tenen variancies diferents.
+# Es rebutja la hip?tesi nul?la: les dues mostres tenen variancies diferents.
 
 # 2. EDAT
 var.test(credit_ds_net[credit_ds_net$bonPagador==0,]$edat,credit_ds_net[credit_ds_net$bonPagador==1,]$edat)
@@ -331,7 +349,7 @@ credit_ds_net==""
 # COMPROVACIO DE VALORS DIFERENTS QUE PREN CADASCUNA DE LES VARIABLES
 apply(credit_ds,2, function(x) length(unique(x)))
 
-# Es pot veure que els atributs que admeten una quantitat major de valors diferents són numèrics: quantitat (sol�licitada), edat, mesosCredit (durada en mesos). Per� alguns atributs cosiderats numerics a la font de dades original, podrien ser considerats com factors, degut al seu reduit nombre de valors possibles. Son concretament els seguents:
+# Es pot veure que els atributs que admeten una quantitat major de valors diferents són numèrics: quantitat (sol?licitada), edat, mesosCredit (durada en mesos). Per? alguns atributs cosiderats numerics a la font de dades original, podrien ser considerats com factors, degut al seu reduit nombre de valors possibles. Son concretament els seguents:
 # Percentatge de renta dedicat (percentRentaDedicat)
 # Temps visquent a la residencia habitual (tempsResidenciaActual)
 # El numero de credits que te atorgats cadascuna de les persones (numCredits)
@@ -364,28 +382,37 @@ nrow(credit_ds_net)
 
 # ESTUDI DE LES VARIABLES==================================================
 
-files <- dim(credit_ds)
+files <- dim(credit_ds_net)
 
 # Relacio amb l'edat -------
-ggplot(data=credit_ds[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
 
 # Relacio relativa entre edat i ingressos ------
-ggplot(data=credit_ds[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, position="fill", color='grey')
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, position="fill", color='grey')
 
-# D'aquestes grafiques, es visualitza clarament que la majoria de credits es sol�liciten entorn als 30 anys (entre els 25 i 35 anys). Es tracta d'un factor important a considerar quan posteriorment s'hagi de decidir el criteri pel qual es discretitza l'edat.
-
-
-# Relacio amb la quantitat de credit sol�licitat -----
-# Relacio en numeros absoluts amb la quantitat de credit sol�licitat.
-ggplot(data=credit_ds[1:files,],aes(x=as.numeric(quantitat), group=bonPagador, fill=bonPagador)) + geom_density(alpha=0.8)
-
-# Relacio relativa amb la quantitat de credit sol�licitat 
-ggplot(data=credit_ds[1:files,],aes(x=as.numeric(quantitat), group=bonPagador, fill=bonPagador)) + geom_density(alpha=0.8, position="fill")
-
-# Com es pot veure a partir de la primera grafica (valors absoluts) la majoria de crèdits són de fins a 5000DM, i a més, per aquestes quantitats, el número de mals pagadors és superior als de bons pagadors. A partir dels 4500DM la tendència s’inverteix i, tot i què la base de dades conté menys casos, per grans quantitats sol·licitades es podria afirmar que es tindran més bons pagadors.
+# D'aquestes grafiques, es visualitza clarament que la majoria de credits es sol?liciten entorn als 30 anys (entre els 25 i 35 anys).
+# A més, el percentatge d'impagaments (mal pagadors) en general és més baix com més edat tenen els clients.
 
 
-# Test de difer�ncia de proporcions propietats================================
+# Relacio amb la quantitat de credit sol?licitat -----
+# Relacio en numeros absoluts amb la quantitat de credit sol?licitat.
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(quantitat), group=bonPagador, fill=bonPagador)) + geom_density(alpha=0.8)
+
+# Relacio relativa amb la quantitat de credit sol?licitat 
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(quantitat), group=bonPagador, fill=bonPagador)) + geom_density(alpha=0.8, position="fill")
+
+# Les gràfiques indiquen que no hi ha una relació directa o concloent entre la quantitat sol·licitada i la taxa d'impagaments (per a crèdits molt petits o molt alts  la taxa d'impagaments sembla ser lleugerament superior als crèdits d'entre 1.500 i 4.000 €)
+
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(propietats), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
+
+# Relació amb les propietats de les que disposa
+ggplot(data=credit_ds_net[1:files,],aes(x=propietats, fill=bonPagador)) + geom_bar()
+ggplot(data=credit_ds_net[1:files,],aes(x=propietats, fill=bonPagador)) + geom_histogram(stat="count", position="fill")+ylab("Freqüència")
+
+# Les gràfiques mostren una lleugera proporció de més bon pagadors entre les persones que disposa algun tipus de propietat confirmada
+
+
+# Test de difer?ncia de proporcions propietats================================
 
 # El que es busca amb aquest test es veure si hi ha diferencia entre bons i mals
 # pagadors respecte a ser propietari d'un immoble
@@ -402,22 +429,22 @@ pobmal <- nrow( credit_ds_net[credit_ds_net$bonPagador==0&credit_ds_net$propieta
 alpha<-0.05
 #Aproximacio del parametre p
 p<-(nbo*pobbo + nmal*pobmal) / (nbo+nmal)
-# Computem el valor observat, el valor cr�titc i el p-valor
+# Computem el valor observat, el valor cr?titc i el p-valor
 zobs <- (pobbo-pobmal)/( sqrt(p*(1-p)*(1/nbo+1/nmal)) )
 zcrit <- qnorm(1-alpha, lower.tail=TRUE)
 pvalue<- pnorm(abs(zobs), lower.tail=FALSE)
 #Imprimim els resultats
 print(sprintf("Valor observat: %1.5f",zobs))
-print(sprintf("Valor cr�tic superior: %1.5f",zcrit))
+print(sprintf("Valor cr?tic superior: %1.5f",zcrit))
 print(sprintf("p-valor: %E",pvalue))
 
 # Es conclou que els bons pagadors tenen una proporcio superior de clients propietaris
 # d'un inmoble.
 
-# Calcul de l'interval de confian�a de quantitat================================
+# Calcul de l'interval de confian?a de quantitat================================
 
-# L'objectiu d'aquest metode es calcular els intervals de confian�a amb una
-# confian�a del 95% de la mitjana de la variable quantitat. Fem el calcul per
+# L'objectiu d'aquest metode es calcular els intervals de confian?a amb una
+# confian?a del 95% de la mitjana de la variable quantitat. Fem el calcul per
 # a bons i mals pagadors
 
 # 1. Bons pagadors
