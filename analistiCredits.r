@@ -1,5 +1,6 @@
 # Carrega de les llibreries emprades=========================================
 library(ggplot2)
+library(arules)
 
 # Carrega del dataset========================================================
 credit_ds <- read.table(
@@ -380,6 +381,34 @@ credit_ds_net$numPersonesManteniment <- credit_ds_norm$numPersonesManteniment
 
 nrow(credit_ds_net)
 
+# DISCRETITZACIÓ
+
+# Per tal de comparar grups de variables entre sí i estudiar-ne les correlacions pot ser útil aplicar tècniques de discretització de les variables continues
+# En el cas que ens ocupa serien l'edat, la quantitat i la durada del prèstec.
+
+# Es poden aplicar diferents tècniques de discretització, però tenint en compte la concentració de les dades i la manca de registres als valors més extrems aplicar la discretització per amplada pot ser contraproduent ja que pot fer perdre molta informació:
+# Per exemple, discretitzant la quantitat en tres trams, per igual amplitud (barres) i igual freqüència (línies vermelles):
+
+hist(credit_ds_net$quantitat, breaks = 3, main = "Discretització quantitat per amplitud vs freqüència en 3 intervals")
+abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE), col = "red")
+
+# En aquest cas es pot veure que la discretització per freqüència genera intervals més equilibrats
+table(discretize(credit_ds_net$quantitat, breaks = 3, method="frequency"))
+
+# També es poden aplicar tècniques de discretització per clustering (k-means): que distribueix les ocurrències de manera que es minimitzi la distància entre cada valor i el valor mitjà de cada interval
+
+table(discretize(credit_ds_net$quantitat, breaks = 3, method="cluster"))
+
+# En aquest cas es pot observar que el número la distribució entre cadascun dels conjunts no és tan homogènia en quan al nombre d'elements
+
+hist(credit_ds_net$quantitat, breaks = 3, main = "Discretització quantitat per amplitud vs freqüència (vermell) vs cluster (verd)")
+abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, method="frequency"), col = "red", lwd=2)
+abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, method="cluster"), col = "green", lwd=2, lty=4)
+
+# A continuació es guarda una nova variable a partir de la quantitat discretitzada emprant la tècnica de clustering:
+credit_ds_net$quantitatDK3 <- discretize(credit_ds_net$quantitat, breaks = 3, method="cluster")
+
+
 # ESTUDI DE LES VARIABLES==================================================
 
 files <- dim(credit_ds_net)
@@ -403,13 +432,23 @@ ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(quantitat), group=bonPagado
 
 # Les gràfiques indiquen que no hi ha una relació directa o concloent entre la quantitat sol·licitada i la taxa d'impagaments (per a crèdits molt petits o molt alts  la taxa d'impagaments sembla ser lleugerament superior als crèdits d'entre 1.500 i 4.000 €)
 
-ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(propietats), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
+# L'anàlisi també es pot realitzar emprant la nova variable quantitat discretitzada:
+ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK3, fill=bonPagador))+geom_bar()
+ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK3, fill=bonPagador)) + geom_histogram(stat ="count",position="fill")+ylab("Frequència")
+
+# L'anàlisi a partir de la gràfica emprant el valor de quantitat discretitzat també deixa entreveure més clarament que no hi ha una relació directa clara entre els impagaments i la quantitat sol·licitada.
+
 
 # Relació amb les propietats de les que disposa
 ggplot(data=credit_ds_net[1:files,],aes(x=propietats, fill=bonPagador)) + geom_bar()
 ggplot(data=credit_ds_net[1:files,],aes(x=propietats, fill=bonPagador)) + geom_histogram(stat="count", position="fill")+ylab("Freqüència")
 
 # Les gràfiques mostren una lleugera proporció de més bon pagadors entre les persones que disposa algun tipus de propietat confirmada
+
+
+
+
+
 
 
 # Test de difer?ncia de proporcions propietats================================
