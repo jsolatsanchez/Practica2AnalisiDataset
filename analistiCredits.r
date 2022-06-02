@@ -1,6 +1,10 @@
 # Carrega de les llibreries emprades=========================================
 library(ggplot2)
 library(arules)
+library(polycor)
+library(rcompanion) # Aplicació del test de correlació Cramer V (variables categòriques)
+library(psych) # Aplicació del test de correlació Tetrachoric (variables binàries)
+
 
 # Carrega del dataset========================================================
 credit_ds <- read.table(
@@ -406,7 +410,7 @@ abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, meth
 abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, method="cluster"), col = "green", lwd=2, lty=4)
 
 # A continuació es guarda una nova variable a partir de la quantitat discretitzada emprant la tècnica de clustering:
-credit_ds_net$quantitatDK3 <- discretize(credit_ds_net$quantitat, breaks = 3, method="cluster")
+credit_ds_net$quantitatDK3 <- discretize(credit_ds_net$quantitat, breaks = 3, method="cluster", labels=c(1,2,3))
 
 
 # ESTUDI DE LES VARIABLES==================================================
@@ -431,6 +435,8 @@ ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(quantitat), group=bonPagado
 ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(quantitat), group=bonPagador, fill=bonPagador)) + geom_density(alpha=0.8, position="fill")
 
 # Les gràfiques indiquen que no hi ha una relació directa o concloent entre la quantitat sol·licitada i la taxa d'impagaments (per a crèdits molt petits o molt alts  la taxa d'impagaments sembla ser lleugerament superior als crèdits d'entre 1.500 i 4.000 €)
+ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(propietats), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
+
 
 # L'anàlisi també es pot realitzar emprant la nova variable quantitat discretitzada:
 ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK3, fill=bonPagador))+geom_bar()
@@ -446,9 +452,83 @@ ggplot(data=credit_ds_net[1:files,],aes(x=propietats, fill=bonPagador)) + geom_h
 # Les gràfiques mostren una lleugera proporció de més bon pagadors entre les persones que disposa algun tipus de propietat confirmada
 
 
+# TESTS DE CORRELACIÓ =====================================================
+
+# Correlació entre la durada del crèdit i la quantiat 
+boxplot(mesosCredit ~ quantitatDK3, credit_ds_net, col = "bisque", border = "black")
+# Observant el gràfic es pot observar que, com és lògic, hi ha una relació entre la durada del crèdit (mesos de retorn) i la quantitat.
+cor.test(credit_ds_net$mesosCredit,credit_ds_net$quantitat, method="spearman")
+
+# Correlació entre la quantitat del crèdit i el ser bon pagador
+boxplot(quantitatDK3 ~ bonPagador, credit_ds_net, col = "bisque", border = "black")
+boxplot(bonPagador ~ quantitatDK3, credit_ds_net, col = "bisque", border = "black")
+cor.test(credit_ds_net$quantitat, as.numeric(credit_ds_net$bonPagador),method="spearman")
 
 
+# Correlació entre la la tenença de propietats i el ser bon pagador
+# Tractant-se de dues variables categòriques, es pot aplicar el test de Cramer V.
+# En primer lloc es crea una matriu de relació entre les dues variables
+matriu_propietatsXbonPagador <- with(credit_ds_net, table(propietats, bonPagador))
+matriu_propietatsXbonPagador
+cramerV(matriu_propietatsXbonPagador)
 
+# El valor de correlació obtingut és proper a 0 (i lluny dels extrems -1 o 1), per tant la correlació és altament dèbil.
+
+# A continuació es farà l'anàlisi amb només un valor de propietat: si és té un immoble o no (binari)
+credit_ds_net$immoble[credit_ds_net$propietats=='real estate'] <- TRUE
+credit_ds_net$immoble[credit_ds_net$propietats!='real estate'] <- FALSE
+matriu_immobleXbonPagador <- with(credit_ds_net, table(immoble, bonPagador))
+matriu_immobleXbonPagador
+# S'aplica el test de correlació tetrachoric (emprat per variables binàries)
+tetrachoric(matriu_immobleXbonPagador)
+# S'aplica el test de correlacio Cramer V (emprat per variables categòriques)
+cramerV(matriu_immobleXbonPagador)
+
+
+# Correlació entre l'edat i ser bon pagador
+cor.test(credit_ds_net$edat, as.numeric(credit_ds_net$bonPagador), method="spearman")
+library(polycor)
+polychor(credit_ds_net$edat, credit_ds_net$bonPagador)
+
+# Correlació entre l'estat del compte corrent i ser bon pagador
+matriu_estatccXbonPagador <- with(credit_ds_net, table(estatCompteCorrent, bonPagador))
+matriu_estatccXbonPagador
+cramerV(matriu_estatccXbonPagador)
+
+# Correlació entre la durada del crèdit i el seu bon pagador
+cor.test(credit_ds_net$mesosCredit,as.numeric(credit_ds_net$bonPagador), method="spearman")
+
+# Correlació entre l'històric de crèdits anteriors i el ser bon pagador
+matriu_historiaXbonPagdor <- with(credit_ds_net, table(historiaCreditsAnteriors, bonPagador))
+matriu_historiaXbonPagdor
+cramerV(matriu_historiaXbonPagdor)
+
+# Correlació entre el motiu del crèdit i el ser bon pagador
+matriu_motiuXbonPagador <- with(credit_ds_net, table(motiu, bonPagador))
+matriu_motiuXbonPagador
+cramerV(matriu_motiuXbonPagador)
+
+# Correlació entre el temps de feina i el ser bon pagador
+matriu_tempsTreballXbonPagador <- with(credit_ds_net, table(tempsTreballActual, bonPagador))
+matriu_tempsTreballXbonPagador
+cramerV(matriu_tempsTreballXbonPagador)
+
+# Correlació entre el sexe/estat civial i el ser bon pagador
+matriu_sexeXbonPagador <- with(credit_ds_net, table(sexeEstatCivil, bonPagador))
+matriu_sexeXbonPagador
+cramerV(matriu_sexeXbonPagador)
+
+# Correlació entre el tipus de feina i el ser bon pagador
+matriu_feinaXbonPagador <- with(credit_ds_net, table(tipusFeina, bonPagador))
+matriu_feinaXbonPagador
+cramerV(matriu_feinaXbonPagador)
+
+
+# ESBORRAR
+boxplot(propietats ~ bonPagador, credit_ds_net, col = "bisque", border = "black")
+cor.test(credit_ds_net$propietats, as.numeric(credit_ds_net$bonPagador),method="spearman")
+chisq.test(credit_ds_net$propietats, credit_ds_net$bonPagador, correct=FALSE)
+# FI ESBORRAR
 
 
 # Test de difer?ncia de proporcions propietats================================
