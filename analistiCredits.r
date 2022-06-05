@@ -28,6 +28,8 @@ files
 
 # ANALISI PRELIMINAR =============================================================
 summary(credit_ds)
+colSums(is.na(credit_ds) )
+colSums(credit_ds=="")
 
 # Analitzant la informacio obtinguda de l'aplicacio de la funcio summary, es poden comprovar els valors mitjans, les medianes i quartils.
 # de les diferents variables del dataset, d'aquesta analisi preliminar es poden extreure les seguents conclusions:
@@ -143,6 +145,7 @@ credit_ds$estranger <- as.factor(credit_ds$estranger)
 # a) Grafics de caixes
 credit_ds_quantitat_bp <-boxplot(credit_ds$quantitat, main="Quantitat")
 credit_ds_quantitat_bp$out
+length(credit_ds_quantitat_bp$out)
 
 # Tot i que la majoria de valors es concentren entre el rang 1.000 - 5.000, alguns valors estan per sobre dels 8.000, que poden ser considerats outliers.
 
@@ -158,6 +161,7 @@ credit_ds$quantitat_deteccio_outlier
 quantitat_deteccio_outlier <- data.frame(valor = credit_ds$quantitat, outlier = quantitat_deteccio_outlier)
 quantitat_outliers <- quantitat_deteccio_outlier[quantitat_deteccio_outlier$outlier == "TRUE", ]
 quantitat_outliers[order(quantitat_outliers$valor),]$valor
+length(quantitat_outliers[order(quantitat_outliers$valor),]$valor)
 
 # Com es pot veure els valors a partir de 8947 podrien ser considerats outliers.
 # Creacio d'un array sense outliers
@@ -188,6 +192,8 @@ edat_deteccio_outlier
 edat_outliers = edat_deteccio_outlier[edat_deteccio_outlier$outlier == "TRUE", ]
 edat_outliers
 edat_outliers[order(edat_outliers$valor),]$valor
+length(edat_outliers[order(edat_outliers$valor),]$valor)
+
 # Com es pot veure els valors a partir de 59 podrien ser considerats outliers.
 # Creacio d'un array sense outliers
 edat_netejat <- edat_deteccio_outlier[edat_deteccio_outlier$outlier == "FALSE", ]
@@ -217,6 +223,7 @@ credit_ds$mesosCredit_deteccio_outlier<-mesosCredit_deteccio_outlier
 mesosCredit_deteccio_outlier <- data.frame(valor = credit_ds$mesosCredit, outlier = mesosCredit_deteccio_outlier)
 mesosCredit_outliers <- mesosCredit_deteccio_outlier[mesosCredit_deteccio_outlier$outlier == "TRUE", ]
 mesosCredit_outliers[order(mesosCredit_outliers$valor),]$valor
+length(mesosCredit_outliers[order(mesosCredit_outliers$valor),]$valor)
 # Com es pot veure els valors a partir de 47 podrien ser considerats outliers.
 
 # Creacio d'un array sense outliers
@@ -228,7 +235,7 @@ mesosCredit_netejat
 credit_ds_net<-credit_ds[credit_ds$quantitat_deteccio_outlier=='FALSE',]
 credit_ds_net<-credit_ds_net[credit_ds_net$edat_deteccio_outlier=='FALSE',]
 credit_ds_net<-credit_ds_net[credit_ds_net$mesosCredit_deteccio_outlier=='FALSE',]
-
+dim(credit_ds_net)
 
 # COMPROVACIO DE LA NORMALITAT==============================================
 
@@ -262,6 +269,21 @@ qqnorm(credit_ds_net$edat);qqline(credit_ds_net$edat, col = 3)
 
 # Si es realitza la valoració gràfica del conjunt original de valors, sense l'eliminació d'outliers, la distribució encara s'allunya més de la normal
 qqnorm(credit_ds$edat);qqline(credit_ds$edat, col = 3)
+
+
+# Representació gràfica d'outliers de quantitat i edat, emprant la distància de Mahalanobis
+qe <- data.frame(credit_ds$quantitat,credit_ds$edat)
+qe
+n.outliers   <- 147
+m.dist.order <- order(mahalanobis(qe, colMeans(qe), cov(qe)), decreasing=TRUE)
+is.outlier   <- rep(FALSE, nrow(qe))
+is.outlier[m.dist.order[1:n.outliers]] <- TRUE
+pch <- is.outlier * 16   # El 16 defineix que els outliers es dibuixaran com a punts negres.
+pch
+plot(ap, pch=pch)
+
+
+
 
 
 
@@ -409,8 +431,9 @@ hist(credit_ds_net$quantitat, breaks = 3, main = "Discretització quantitat per 
 abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, method="frequency"), col = "red", lwd=2)
 abline(v = discretize(credit_ds_net$quantitat, breaks = 3, onlycuts = TRUE, method="cluster"), col = "green", lwd=2, lty=4)
 
-# A continuació es guarda una nova variable a partir de la quantitat discretitzada emprant la tècnica de clustering:
+# A continuació es guarden dues noves variable a partir de la quantitat discretitzada emprant la tècnica de clustering (de 3 i 5 trams, respectivament).
 credit_ds_net$quantitatDK3 <- discretize(credit_ds_net$quantitat, breaks = 3, method="cluster", labels=c(1,2,3))
+credit_ds_net$quantitatDK5 <- discretize(credit_ds_net$quantitat, breaks = 5, method="cluster", labels=c(1,2,3,4,5))
 
 
 # ESTUDI DE LES VARIABLES==================================================
@@ -420,7 +443,7 @@ files <- dim(credit_ds_net)
 # Relacio amb l'edat -------
 ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, color='black')
 
-# Relacio relativa entre edat i ingressos ------
+# Relacio relativa entre edat
 ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(edat), group=bonPagador, fill=bonPagador)) + geom_histogram(binwidth=1, position="fill", color='grey')
 
 # D'aquestes grafiques, es visualitza clarament que la majoria de credits es sol?liciten entorn als 30 anys (entre els 25 i 35 anys).
@@ -441,6 +464,10 @@ ggplot(data=credit_ds_net[1:files,],aes(x=as.numeric(propietats), group=bonPagad
 # L'anàlisi també es pot realitzar emprant la nova variable quantitat discretitzada:
 ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK3, fill=bonPagador))+geom_bar()
 ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK3, fill=bonPagador)) + geom_histogram(stat ="count",position="fill")+ylab("Frequència")
+
+ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK5, fill=bonPagador))+geom_bar()
+ggplot(data = credit_ds_net[1:files,], aes(x=quantitatDK5, fill=bonPagador)) + geom_histogram(stat ="count",position="fill")+ylab("Frequència")
+
 
 # L'anàlisi a partir de la gràfica emprant el valor de quantitat discretitzat també deixa entreveure més clarament que no hi ha una relació directa clara entre els impagaments i la quantitat sol·licitada.
 
@@ -495,6 +522,15 @@ matriu_estatccXbonPagador <- with(credit_ds_net, table(estatCompteCorrent, bonPa
 matriu_estatccXbonPagador
 cramerV(matriu_estatccXbonPagador)
 
+# Correlació entre l'estat del compte d'estalvi i ser bon pagador
+matriu_estatceXbonPagador <- with(credit_ds_net, table(estatCompteEstalvi, bonPagador))
+matriu_estatceXbonPagador
+cramerV(matriu_estatceXbonPagador)
+
+
+boxplot(estatCompteCorrent ~ bonPagador, credit_ds_net, col = "bisque", border = "black")
+summary(credit_ds_net$estatCompteCorrent)
+
 # Correlació entre la durada del crèdit i el seu bon pagador
 cor.test(credit_ds_net$mesosCredit,as.numeric(credit_ds_net$bonPagador), method="spearman")
 
@@ -523,12 +559,6 @@ matriu_feinaXbonPagador <- with(credit_ds_net, table(tipusFeina, bonPagador))
 matriu_feinaXbonPagador
 cramerV(matriu_feinaXbonPagador)
 
-
-# ESBORRAR
-boxplot(propietats ~ bonPagador, credit_ds_net, col = "bisque", border = "black")
-cor.test(credit_ds_net$propietats, as.numeric(credit_ds_net$bonPagador),method="spearman")
-chisq.test(credit_ds_net$propietats, credit_ds_net$bonPagador, correct=FALSE)
-# FI ESBORRAR
 
 
 # Test de difer?ncia de proporcions propietats================================
