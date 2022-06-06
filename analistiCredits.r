@@ -237,6 +237,11 @@ credit_ds_net<-credit_ds_net[credit_ds_net$edat_deteccio_outlier=='FALSE',]
 credit_ds_net<-credit_ds_net[credit_ds_net$mesosCredit_deteccio_outlier=='FALSE',]
 dim(credit_ds_net)
 
+# S'exporta el conjunt de dades resultant de la recodificació i eliminació d'outliers a csv:
+credit_ds_net_exportable<-data.frame(lapply(credit_ds_net, as.character), stringsAsFactors=FALSE)
+write.csv(credit_ds_net_exportable,"dataset/german.data.sortida", row.names = TRUE)
+
+
 # COMPROVACIO DE LA NORMALITAT==============================================
 
 # 1. QUANTITAT
