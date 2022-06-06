@@ -11,6 +11,7 @@ Pràctica 2 de l'assignatura Tipologia i Cicle de Vida de les dades. UOC.
 El projecte conté els següents fitxers:
 
 * analistiCredits.r: codi d'R utilitzat per fer el tractament de dades, tests estadístics i generar les gràfiques
+* TCVD_Practica2_jsola_asanchez.pdf: memòria de l'anàlisi del conjunt de dades
 
 ## Enllaç del dataset analitzat
 * https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data
