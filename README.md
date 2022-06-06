@@ -14,3 +14,6 @@ El projecte conté els següents fitxers:
 
 ## Enllaç del dataset analitzat
 * https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data
+
+## Enllaç al vídeo de presentació
+* https://drive.google.com/file/d/1iAmxnTWY2PCx_Xmb0KfUS8dU3zYydJPE/view?usp=sharing
